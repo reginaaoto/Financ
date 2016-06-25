@@ -22,6 +22,14 @@
         .valor-credito{
             color: blue;
         }
+        .saldo{
+            font-size: 16px;
+            border-top: solid 2px black;
+        }
+        #valor-total{
+            font-weight: bold;     
+        }
+        
     </style>
     
     <!-- Custom styles for this template -->
@@ -32,40 +40,58 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/bootstrap-datepicker.min.js"></script>
     <script src="locales/bootstrap-datepicker.pt-BR.min.js"></script>
-  
-    <script type="text/javascript">
+      <script src="js/util.js"></script>
+
+   <script type="text/javascript">
         $(document).ready(function(){
             
             $('#data').datepicker({
                 format: "dd/mm/yyyy",
-                language: "pt-BR"
+                language: "pt-BR",
+                endDate: "now"
             });
-           
+            
             $.getJSON('model/30dias.php',function(dados){
-                console.log(dados);
-                
-                var total = 0;
-                $(dados).each(function(ind, elem){
-                    var classValor = (elem.tipo == "C")? 'valor-credito':'valor-debito';
-                    
-                    total = (elem.tipo == "C")? total + parseFloat(elem.valor) : total - parseFloat(elem.valor);
-                    var data = new Date(elem.data);
-                     
-                    var tr = $('<tr>'+ 
-                        '<td>'+data.getDate()+'/'+(data.getMonth()+1)+'/'+data.getFullYear()+'</td>'+
-                        '<td>'+elem.descricao+'</td>'+
-                        '<td>'+elem.categoria+'</td>'+
-                        '<td>'+elem.tipo+'</td>'+
-                        '<td class="'+classValor+'">R$ '+elem.valor+'</td>'+
-                      '</tr>');
         
-                    $('#rel-30dias tbody').append(tr);
-                    $('#valor-total').html("R$ "+total);
+                
+                $(dados).each(function(ind, elem){
+                    
+                    var data = new Date(elem.data);
+                    elem.data = data.getDate()+'/'+(data.getMonth()+1)+'/'+data.getFullYear();
+                    
+                    insereRegistro(elem);
+                    
                 });
-                
-                
         
             });
+            
+            $.getJSON('model/saldo.php',function(dados){                   
+                    $("#valor-total").html('R$ ' + formataDinheiro(dados.saldo));
+            });
+            
+            $('#cadastro-novo').submit(function(evento){
+                evento.preventDefault();
+                
+                var novoRegistro = {
+                    descricao: $('#Descricao').val(),
+                    data: $('#data').val(),
+                    valor: $('#valor').val(),
+                    categoria: $('#categoria').val(),
+                    tipo: $("input[name='tipo']:checked").val()
+                };
+                console.log(novoRegistro);
+                $.post('model/novo.php', novoRegistro);
+                
+                $('#add-registro').modal('hide');
+                
+                insereRegistro(novoRegistro);
+                
+                $.getJSON('model/saldo.php',function(dados){                   
+                    $("#valor-total").html('R$ ' + formataDinheiro(dados.saldo));
+                });
+            });
+            
+            
         });
     </script>
 
@@ -143,10 +169,10 @@
                 
               </tbody>
               
-              <tfoot>
+              <tfoot class="saldo">
                   <tr>
                       <td colspan="4">Saldo Total:</td>
-                      <td id="valor-total">123.89</td>
+                      <td id="valor-total"></td>
                   </tr>
               </tfoot>
             </table>
@@ -154,27 +180,26 @@
         </div>
       </div>
     </div>
-
+ 
 <!-- Small modal -->
 <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" id="add-registro">
   <div class="modal-dialog modal-sm">
-    <div class="modal-content">
+       
+      <div class="modal-content">
+ 
+       <form class="form-horizontal"  id="cadastro-novo">          
        <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title">Adicionar Novo Registro</h4>
       </div>
         <div class="modal-body">
-       <form class="form-horizontal">
+      
 <fieldset>
-
-    
-   
         <!-- Text input-->
         <div class="form-group">
           <label class="col-md-4 control-label" for="Descricao">Descrição</label>  
           <div class="col-md-8">
           <input id="Descricao" name="Descricao" type="text" placeholder="" class="form-control input-md" required="">
-
           </div>
         </div>
 
@@ -230,19 +255,16 @@
    
         
         </fieldset>
-        </form>
-
-            
             
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary">Salvar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
+   </form>
         
     </div>
   </div>
 </div>
-   
   </body>
 </html>
