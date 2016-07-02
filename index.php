@@ -1,3 +1,10 @@
+<?php
+   // print_r($_COOKIE);die();
+    if (!isset($_COOKIE['sess-sis']))
+    {
+      header('Location: login.html');
+    }            
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -40,10 +47,13 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/bootstrap-datepicker.min.js"></script>
     <script src="locales/bootstrap-datepicker.pt-BR.min.js"></script>
-      <script src="js/util.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/inputmask/jquery.inputmask.bundle.js"></script>
 
    <script type="text/javascript">
         $(document).ready(function(){
+            
+            $("#valor").inputmask();
             
             $('#data').datepicker({
                 format: "dd/mm/yyyy",
@@ -72,6 +82,19 @@
             $('#cadastro-novo').submit(function(evento){
                 evento.preventDefault();
                 
+                if ($('#Descricao').val() == '')
+                {
+                    $('#Descricao').parent()
+                            .parent()
+                            .addClass('has-error');
+                    $('#Descricao')
+                            .parent()
+                            .find('.help-block')
+                            .removeClass('hide');
+                    
+                    return false;
+                }
+                
                 var novoRegistro = {
                     descricao: $('#Descricao').val(),
                     data: $('#data').val(),
@@ -91,6 +114,9 @@
                 });
             });
             
+         $('#add-registro').on('hidden.bs.modal', function(e){
+             $('#cadastro-novo input').val('');             
+         });   
             
         });
     </script>
@@ -199,16 +225,20 @@
         <div class="form-group">
           <label class="col-md-4 control-label" for="Descricao">Descrição</label>  
           <div class="col-md-8">
-          <input id="Descricao" name="Descricao" type="text" placeholder="" class="form-control input-md" required="">
+              <input id="Descricao" name="Descricao" type="text" placeholder="" class="form-control input-md" >
+          <span class="help-block hide">Esse campo é obrigatório.</span>
           </div>
+          
         </div>
 
         <!-- Text input-->
         <div class="form-group">
           <label class="col-md-4 control-label" for="categoria">Categoria</label>  
-          <div class="col-md-8">
-          <input id="categoria" name="categoria" type="text" placeholder="" class="form-control input-md" required="">
-
+          <div class="col-md-8"> 
+          <select id="categoria" name="categoria"  class="form-control input-md">
+              <option value="0">------Selecione ------</option>
+              
+          </select>
           </div>
         </div>
 
@@ -219,7 +249,8 @@
           <div class="col-md-8">
             <div class="input-group">
               <span class="input-group-addon">R$</span>
-              <input id="valor" name="valor" class="form-control" placeholder="" type="text" required="">
+              
+              <input id="valor" name="valor" class="form-control" placeholder="" type="text" data-inputmask="'alias': 'numeric', 'groupSeparator': '.', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': '', 'placeholder': '0'" style="text-align: right;">
             </div>
 
           </div>
@@ -248,7 +279,7 @@
         <div class="form-group">
           <label class="col-md-4 control-label" for="Descricao">Data</label>  
           <div class="col-md-8">
-          <input id="data" name="data" type="text" placeholder="" class="form-control input-md" required="">
+          <input id="data" name="data" type="text" placeholder="" class="form-control input-md" >
  
           </div>
         </div>
