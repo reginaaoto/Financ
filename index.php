@@ -1,9 +1,9 @@
 <?php
-   // print_r($_COOKIE);die();
+    
     if (!isset($_COOKIE['sess-sis']))
     {
-      header('Location: login.html');
-    }            
+        header('Location: login.html');
+    }
 ?>
 
 <!DOCTYPE html>
@@ -29,14 +29,13 @@
         .valor-credito{
             color: blue;
         }
-        .saldo{
-            font-size: 16px;
+        .saldo {
+            font-size: 12pt;
             border-top: solid 2px black;
         }
         #valor-total{
-            font-weight: bold;     
+            font-weight: bold;
         }
-        
     </style>
     
     <!-- Custom styles for this template -->
@@ -45,13 +44,24 @@
     
     <script src="js/jquery-2.2.4.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    
     <script src="js/bootstrap-datepicker.min.js"></script>
     <script src="locales/bootstrap-datepicker.pt-BR.min.js"></script>
-    <script src="js/util.js"></script>
+    
     <script src="js/inputmask/jquery.inputmask.bundle.js"></script>
+    
+    <script src="js/util.js"></script>
 
-   <script type="text/javascript">
+    <script type="text/javascript">
         $(document).ready(function(){
+            
+            var cookies = leCookie();
+            var user = JSON.parse(cookies["sess-sis"]);
+            
+            $("#userNome").html(user.nome);
+            $("#userNome").click(desloga);
+            
+            console.log(user.id);
             
             $("#valor").inputmask();
             
@@ -61,9 +71,15 @@
                 endDate: "now"
             });
             
+            $.getJSON('model/categorias.php',function(dados){
+                $(dados).each(function(ind, elem){
+                    var op = $('<option value='+elem.id+'>'+elem.nome+'</option>');
+                     $('#categoria').append(op); 
+                });
+            });
+            
             $.getJSON('model/30dias.php',function(dados){
-        
-                
+                       
                 $(dados).each(function(ind, elem){
                     
                     var data = new Date(elem.data);
@@ -72,6 +88,7 @@
                     insereRegistro(elem);
                     
                 });
+
         
             });
             
@@ -82,16 +99,17 @@
             $('#cadastro-novo').submit(function(evento){
                 evento.preventDefault();
                 
+                
                 if ($('#Descricao').val() == '')
                 {
                     $('#Descricao').parent()
                             .parent()
                             .addClass('has-error');
+                    
                     $('#Descricao')
                             .parent()
                             .find('.help-block')
                             .removeClass('hide');
-                    
                     return false;
                 }
                 
@@ -99,8 +117,10 @@
                     descricao: $('#Descricao').val(),
                     data: $('#data').val(),
                     valor: $('#valor').val(),
-                    categoria: $('#categoria').val(),
-                    tipo: $("input[name='tipo']:checked").val()
+                    //categoria: $('#categoria').val(),
+                    categoria: $('#categoria option:selected').val(),
+                    tipo: $("input[name='tipo']:checked").val(),
+                    usuario: user.id
                 };
                 console.log(novoRegistro);
                 $.post('model/novo.php', novoRegistro);
@@ -114,10 +134,11 @@
                 });
             });
             
-         $('#add-registro').on('hidden.bs.modal', function(e){
-             $('#cadastro-novo input').val('');             
-         });   
-            
+          
+          $('#add-registro').on('hidden.bs.modal', function(e){
+              $('#cadastro-novo input').val('');
+          });
+          
         });
     </script>
 
@@ -138,10 +159,11 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">Relatórios</a></li>
+            <li><a href="#">Relatorios</a></li>
             <li><a href="#">Histórico</a></li>
             <li><a href="#">Contas</a></li>
-            <li><a href="#">Usuário</a></li>
+            <li><a href="#" id="userNome">Usuário</a></li>
+            
           </ul>
           
         </div>
@@ -153,7 +175,9 @@
        
         <div class="col-md-12  main">
           <h1 class="page-header">Painel 
-              <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#add-registro"><span class="glyphicon glyphicon-plus-sign"></span> Registro</button></h1>
+              <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#add-registro">
+                  <span class="glyphicon glyphicon-plus-sign"></span> Registro</button>
+          </h1>
 
           <div class="row placeholders">
             <div class="col-xs-6 col-sm-3 placeholder">
@@ -178,7 +202,7 @@
             </div>
           </div>
 
-          <h2 class="sub-header">Últimos 30 dias</h2>
+          <h2 class="sub-header">Ultimos 30 dias</h2>
           <div class="table-responsive">
             <table class="table table-striped" id="rel-30dias">
               <thead>
@@ -206,96 +230,105 @@
         </div>
       </div>
     </div>
- 
-<!-- Small modal -->
+
+      <!-- Small modal -->
+
 <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" id="add-registro">
   <div class="modal-dialog modal-sm">
-       
-      <div class="modal-content">
- 
-       <form class="form-horizontal"  id="cadastro-novo">          
-       <div class="modal-header">
+    <div class="modal-content">
+        
+      <form class="form-horizontal"  id="cadastro-novo">
+      
+      <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title">Adicionar Novo Registro</h4>
       </div>
-        <div class="modal-body">
-      
-<fieldset>
-        <!-- Text input-->
-        <div class="form-group">
-          <label class="col-md-4 control-label" for="Descricao">Descrição</label>  
-          <div class="col-md-8">
-              <input id="Descricao" name="Descricao" type="text" placeholder="" class="form-control input-md" >
-          <span class="help-block hide">Esse campo é obrigatório.</span>
-          </div>
+        
+      <div class="modal-body">
           
-        </div>
+            <fieldset>
 
-        <!-- Text input-->
-        <div class="form-group">
-          <label class="col-md-4 control-label" for="categoria">Categoria</label>  
-          <div class="col-md-8"> 
-          <select id="categoria" name="categoria"  class="form-control input-md">
-              <option value="0">------Selecione ------</option>
-              
-          </select>
-          </div>
-        </div>
 
-        <!-- Text input-->
-       <!-- Prepended text-->
-        <div class="form-group">
-          <label class="col-md-4 control-label" for="valor">Valor</label>
-          <div class="col-md-8">
-            <div class="input-group">
-              <span class="input-group-addon">R$</span>
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="Descricao">Descrição</label>  
+              <div class="col-md-8">
+                <input id="Descricao" name="Descricao" type="text" placeholder="" class="form-control input-md" >
+                <span class="help-block hide">Esse campo é obrigatório</span>
+              </div>
               
-              <input id="valor" name="valor" class="form-control" placeholder="" type="text" data-inputmask="'alias': 'numeric', 'groupSeparator': '.', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': '', 'placeholder': '0'" style="text-align: right;">
             </div>
 
-          </div>
-        </div>
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="categoria" >Categoria</label>  
+              <div class="col-md-8">
+              
+              <select id="categoria" name="categoria" class="form-control input-md">
+                  <option value="0">----- Selecione -----</option>
+              </select>
+              
+              </div>
+            </div>
 
-        <!-- Multiple Radios -->
-        <div class="form-group">
-          <label class="col-md-4 control-label" for="tipo">Tipo de registro</label>
-          <div class="col-md-8">
-          <div class="radio">
-            <label for="tipo-0">
-              <input type="radio" name="tipo" id="tipo-0" value="C" checked="checked">
-              Crédito
-            </label>
-                </div>
-          <div class="radio">
-            <label for="tipo-1">
-              <input type="radio" name="tipo" id="tipo-1" value="D">
-              Débito
-            </label>
-                </div>
-          </div>
-        </div>
+            <div class="form-group">
+            <label class="col-md-4 control-label" for="valor">Valor</label>
+            <div class="col-md-8">
+              <div class="input-group">
+                <span class="input-group-addon">R$</span>
+                <input id="valor" name="valor" class="form-control" placeholder="" type="text" required="required"
+                       data-inputmask="'alias': 'numeric', 
+                       'groupSeparator': '.', 
+                       'autoGroup': true, 
+                       'digits': 2, 
+                       'digitsOptional': false, 
+                       'prefix': '', 
+                       'placeholder': '0'">
+              </div>
 
-             <!-- Text input-->
-        <div class="form-group">
-          <label class="col-md-4 control-label" for="Descricao">Data</label>  
-          <div class="col-md-8">
-          <input id="data" name="data" type="text" placeholder="" class="form-control input-md" >
- 
+            </div>
           </div>
-        </div>
-   
-        
-        </fieldset>
+
+            <!-- Multiple Radios -->
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="tipo">Tipo de registro</label>
+              <div class="col-md-8">
+              <div class="radio">
+                <label for="tipo-0">
+                  <input type="radio" name="tipo" id="tipo-0" value="C" checked="checked">
+                  Crédito
+                </label>
+                    </div>
+              <div class="radio">
+                <label for="tipo-1">
+                  <input type="radio" name="tipo" id="tipo-1" value="D">
+                  Débito
+                </label>
+                    </div>
+              </div>
+            </div>
             
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-md-4 control-label" >Data</label>  
+              <div class="col-md-8">
+              <input id="data" name="data" type="text" placeholder="" class="form-control input-md">
+
+              </div>
+            </div>
+
+            </fieldset>
       </div>
+        
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
-   </form>
-        
+     </form>
+
     </div>
   </div>
 </div>
+    
   </body>
 </html>
